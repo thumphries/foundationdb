@@ -1,0 +1,30 @@
+name:                  foundationdb
+version:               0.0.1
+synopsis:              Haskell bindings to Apple's FoundationDB
+homepage:              https://github.com/thumphries/foundationdb
+license:               BSD3
+author:                Tim Humphries
+maintainer:            tim@utf8.me
+category:              System
+build-type:            Simple
+cabal-version:         >=1.10
+
+library
+  default-language:    Haskell2010
+  ghc-options:         -Wall -Werror
+  hs-source-dirs:      src
+
+  include-dirs:        csrc
+  cc-options:          -Wall -Wextra -Werror
+  build-tools:         c2hs >= 0.28
+
+  extra-libraries:     fdb_c
+
+
+
+  exposed-modules:     
+                       FoundationDb.C
+                       FoundationDb.Types
+
+  build-depends:
+                       base
