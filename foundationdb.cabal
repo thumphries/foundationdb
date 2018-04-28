@@ -14,13 +14,9 @@ library
   ghc-options:         -Wall -Werror
   hs-source-dirs:      src
 
-  include-dirs:        csrc
-  cc-options:          -Wall -Wextra -Werror
   build-tools:         c2hs >= 0.28
 
   extra-libraries:     fdb_c
-
-
 
   exposed-modules:     
                        FoundationDb.C
