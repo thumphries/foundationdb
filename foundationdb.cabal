@@ -8,23 +8,37 @@ maintainer:            tim@utf8.me
 category:              System
 build-type:            Simple
 cabal-version:         >=1.10
+extra-source-files:    csrc/fdb_hs.h, csrc/fdb_hs.c
 
 library
   default-language:    Haskell2010
   ghc-options:         -Wall -Werror
   hs-source-dirs:      src
-
   include-dirs:        csrc
+  c-sources:           csrc/fdb_hs.c
   cc-options:          -Wall -Wextra -Werror
+
   build-tools:         c2hs >= 0.28
 
   extra-libraries:     fdb_c
 
-
-
   exposed-modules:     
                        FoundationDb.C
-                       FoundationDb.Types
+                       FoundationDb.C.FFI
+                       FoundationDb.C.Types
 
   build-depends:
                        base
+                     , bytestring
+
+test-suite test
+  type:                exitcode-stdio-1.0
+  default-language:    Haskell2010
+  ghc-options:         -Wall -Werror
+  hs-source-dirs:      test
+  main-is:             test.hs
+
+  build-depends:
+                       base
+                     , foundationdb
+                     , QuickCheck
