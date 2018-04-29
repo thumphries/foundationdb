@@ -1,12 +1,17 @@
 {-# LANGUAGE EmptyDataDecls #-}
-module FoundationDb.Types (
+module FoundationDb.C.Types (
     Database
   , Transaction
   , Cluster
   , Future
   , NetworkOption (..)
   , StreamingMode (..)
+  , Error (..)
   ) where
+
+
+import           Foreign.C
+
 
 #define FDB_API_VERSION 510
 #include <foundationdb/fdb_c.h>
@@ -30,6 +35,10 @@ module FoundationDb.Types (
 
 -- FDBTransaction family
 
+
+newtype Error = Error {
+    unError :: CInt
+  } deriving (Eq, Ord, Show)
 
 data Database
 
