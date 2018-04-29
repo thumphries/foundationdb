@@ -14,6 +14,10 @@ module FoundationDb.C (
   , futureBlockUntilReady
   , futureIsReady
   , futureSetCallback
+  , futureReleaseMemory
+  , futureGetError
+  , futureGetKey
+  , futureGetValue
   ) where
 
 
@@ -23,6 +27,9 @@ import           Control.Monad (unless)
 import           Data.Bifunctor (first)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as B
+
+import           Foreign.Marshal.Alloc (alloca)
+import           Foreign.Storable (Storable (..))
 
 import qualified FoundationDb.C.FFI as FFI
 import           FoundationDb.C.Types
@@ -81,6 +88,40 @@ futureSetCallback f c p = do
       <$> FFI.fdb_future_set_callback
             (unFuture f) (unCallback c) (unParam p)
 
+futureReleaseMemory :: Future -> IO ()
+futureReleaseMemory f =
+  FFI.fdb_future_release_memory (unFuture f)
+
+futureGetError :: Future -> IO CError
+futureGetError f =
+  CError <$> FFI.fdb_future_get_error (unFuture f)
+
+futureGetKey :: Future -> IO ByteString
+futureGetKey f =
+  alloca $ \keyPtrPtr ->
+    alloca $ \lenPtr -> do
+      throwingX FutureGetKeyError $
+        CError <$> FFI.fdb_future_get_key (unFuture f) keyPtrPtr lenPtr
+      len <- peek lenPtr
+      keyPtr <- peek keyPtrPtr
+      B.packCStringLen (keyPtr, fromIntegral len)
+
+futureGetValue :: Future -> IO (Maybe ByteString)
+futureGetValue f =
+  alloca $ \boolPtr ->
+    alloca $ \valPtrPtr ->
+      alloca $ \lenPtr -> do
+        throwingX FutureGetValueError $
+          CError <$> FFI.fdb_future_get_value (unFuture f) boolPtr valPtrPtr lenPtr
+        bool <- peek boolPtr
+        case cbool bool of
+          False ->
+            return Nothing
+          True -> do
+            len <- peek lenPtr
+            valPtr <- peek valPtrPtr
+            Just <$> B.packCStringLen (valPtr, fromIntegral len)
+
 -- ---------------------------------------------------------------------------
 -- Errors
 
@@ -92,6 +133,8 @@ data Error =
   | StopNetworkError !CError
   | FutureBlockError !CError
   | FutureSetCallbackError !CError
+  | FutureGetKeyError !CError
+  | FutureGetValueError !CError
   deriving (Eq, Ord, Show)
 
 -- | Produce a human-readable error message from a 'CError'.
