@@ -7,6 +7,10 @@ module FoundationDb.C.Types (
   , Callback (..)
   , Param (..)
   , Param'
+  , Cluster (..)
+  , Cluster'
+  , Database (..)
+  , Database'
   , NetworkOption (..)
   , StreamingMode (..)
   , CError (..)
@@ -80,6 +84,18 @@ newtype Param = Param {
   } deriving (Eq, Ord, Show)
 
 data Param'
+
+newtype Database = Database {
+    unDatabase :: Ptr Database'
+  } deriving (Eq, Ord, Show)
+
+data Database'
+
+newtype Cluster = Cluster {
+    unCluster :: Ptr Cluster'
+  } deriving (Eq, Ord, Show)
+
+data Cluster'
 
 {#enum FDBNetworkOption as NetworkOption
    { FDB_NET_OPTION_LOCAL_ADDRESS as LOCAL_ADDRESS

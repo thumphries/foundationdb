@@ -16,6 +16,8 @@ module FoundationDb.C.FFI (
   , fdb_future_get_key
   , fdb_future_get_value
   , fdb_future_get_string_array
+  , fdb_future_get_cluster
+  , fdb_future_get_database
   , fdb_transaction_destroy
   , fdb_transaction_get
   , fdb_transaction_get_key
@@ -82,6 +84,12 @@ foreign import ccall safe "foundationdb/fdb_c.h fdb_future_get_value"
 
 foreign import ccall safe "foundationdb/fdb_c.h fdb_future_get_string_array"
   fdb_future_get_string_array :: Ptr Future' -> Ptr (Ptr CString) -> Ptr CInt -> IO CInt
+
+foreign import ccall safe "foundationdb/fdb_c.h fdb_future_get_cluster"
+  fdb_future_get_cluster :: Ptr Future' -> Ptr (Ptr Cluster') -> IO CInt
+
+foreign import ccall safe "foundationdb/fdb_c.h fdb_future_get_database"
+  fdb_future_get_database :: Ptr Future' -> Ptr (Ptr Database') -> IO CInt
 
 foreign import ccall safe "foundationdb/fdb_c.h fdb_transaction_destroy"
   fdb_transaction_destroy :: Ptr Transaction' -> IO ()

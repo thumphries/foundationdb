@@ -3,11 +3,13 @@ module FoundationDb.C (
     Error (..)
   , catchError
   , errorMessage
+
   -- * Setup / teardown
   , selectApiVersion
   , setupNetwork
   , runNetwork
   , stopNetwork
+
   -- * Futures
   , futureCancel
   , futureDestroy
@@ -19,6 +21,8 @@ module FoundationDb.C (
   , futureGetKey
   , futureGetValue
   , futureGetStringArray
+  , futureGetCluster
+  , futureGetDatabase
 
   -- * Transactions
   , transactionDestroy
@@ -150,6 +154,25 @@ futureGetStringArray f =
       let vec = SV.convert $ SV.unsafeFromForeignPtr0 ptr (fromIntegral len)
       traverse B.packCString vec
 
+futureGetCluster :: Future -> IO Cluster
+futureGetCluster f =
+  alloca $ \clsPtr -> do
+    throwingX FutureGetClusterError $
+      CError <$> FFI.fdb_future_get_cluster (unFuture f) clsPtr
+    cls <- peek clsPtr
+    return (Cluster cls)
+
+futureGetDatabase :: Future -> IO Database
+futureGetDatabase f =
+  alloca $ \dbPtr -> do
+    throwingX FutureGetDatabaseError $
+      CError <$> FFI.fdb_future_get_database (unFuture f) dbPtr
+    db <- peek dbPtr
+    return (Database db)
+
+-- ---------------------------------------------------------------------------
+-- Transaction
+
 transactionDestroy :: Transaction -> IO ()
 transactionDestroy t =
   FFI.fdb_transaction_destroy (unTransaction t)
@@ -203,6 +226,8 @@ data Error =
   | FutureGetKeyError !CError
   | FutureGetValueError !CError
   | FutureGetStringArrayError !CError
+  | FutureGetClusterError !CError
+  | FutureGetDatabaseError !CError
   deriving (Eq, Ord, Show)
 
 -- | Produce a human-readable error message from a 'CError'.
