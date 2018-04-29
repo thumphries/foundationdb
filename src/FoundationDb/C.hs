@@ -19,6 +19,15 @@ module FoundationDb.C (
   , futureGetKey
   , futureGetValue
   , futureGetStringArray
+
+  -- * Transactions
+  , transactionDestroy
+  , transactionGet
+  , transactionGetKey
+  , transactionSet
+  , transactionCommit
+  , transactionReset
+  , transactionCancel
   ) where
 
 
@@ -28,9 +37,11 @@ import           Control.Monad (unless)
 import           Data.Bifunctor (first)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as B
+import           Data.Int (Int32)
 import           Data.Vector (Vector)
 import qualified Data.Vector.Storable as SV
 
+import           Foreign.C.Types (CInt (..))
 import           Foreign.ForeignPtr (newForeignPtr_)
 import           Foreign.Marshal.Alloc (alloca)
 import           Foreign.Storable (Storable (..))
@@ -126,6 +137,7 @@ futureGetValue f =
             valPtr <- peek valPtrPtr
             Just <$> B.packCStringLen (valPtr, fromIntegral len)
 
+
 futureGetStringArray :: Future -> IO (Vector ByteString)
 futureGetStringArray f =
   alloca $ \arrPtr ->
@@ -137,6 +149,45 @@ futureGetStringArray f =
       ptr <- newForeignPtr_ arr
       let vec = SV.convert $ SV.unsafeFromForeignPtr0 ptr (fromIntegral len)
       traverse B.packCString vec
+
+transactionDestroy :: Transaction -> IO ()
+transactionDestroy t =
+  FFI.fdb_transaction_destroy (unTransaction t)
+
+transactionGet :: Transaction -> ByteString -> Bool -> IO Future
+transactionGet t key snapshot =
+  B.useAsCStringLen key $ \(ptr, len) ->
+    Future <$> FFI.fdb_transaction_get (unTransaction t) ptr len (boolc snapshot)
+
+transactionGetKey :: Transaction -> ByteString -> Bool -> Int32 -> Bool -> IO Future
+transactionGetKey t key orEqual offset snapshot =
+  B.useAsCStringLen key $ \(ptr, len) ->
+    fmap Future $
+      FFI.fdb_transaction_get_key
+        (unTransaction t)
+        ptr
+        len
+        (boolc orEqual)
+        (CInt offset)
+        (boolc snapshot)
+
+transactionSet :: Transaction -> ByteString -> ByteString -> IO ()
+transactionSet t key value =
+  B.useAsCStringLen key $ \(keyPtr, keyLen) ->
+  B.useAsCStringLen value $ \(valuePtr, valueLen) ->
+    FFI.fdb_transaction_set (unTransaction t) keyPtr keyLen valuePtr valueLen
+
+transactionCommit :: Transaction -> IO Future
+transactionCommit t =
+  Future <$> FFI.fdb_transaction_commit (unTransaction t)
+
+transactionReset :: Transaction -> IO ()
+transactionReset t =
+  FFI.fdb_transaction_reset (unTransaction t)
+
+transactionCancel :: Transaction -> IO ()
+transactionCancel t =
+  FFI.fdb_transaction_cancel (unTransaction t)
 
 -- ---------------------------------------------------------------------------
 -- Errors

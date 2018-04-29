@@ -2,6 +2,8 @@
 module FoundationDb.C.Types (
     Future (..)
   , Future'
+  , Transaction (..)
+  , Transaction'
   , Callback (..)
   , Param (..)
   , Param'
@@ -10,6 +12,7 @@ module FoundationDb.C.Types (
   , CError (..)
   , csuccess
   , cbool
+  , boolc
   ) where
 
 
@@ -23,7 +26,7 @@ import           Foreign.C
 
 
 -- TODO list
--- Opaque types: Database, Transaction, Cluster, FDBFuture
+-- Opaque types: Database, Cluster, FDBFuture
 -- NetworkOption
 
 -- Library setup / teardown:
@@ -51,11 +54,22 @@ cbool :: CInt -> Bool
 cbool 0 = False
 cbool _ = True
 
+boolc :: Bool -> CInt
+boolc False = 0
+boolc True = 1
+
 newtype Future = Future {
     unFuture :: Ptr Future'
   } deriving (Eq, Ord, Show)
 
 data Future'
+
+newtype Transaction = Transaction {
+    unTransaction :: Ptr Transaction'
+  } deriving (Eq, Ord, Show)
+
+data Transaction'
+
 
 newtype Callback = Callback {
     unCallback :: FunPtr (Ptr Future' -> Ptr Param' -> IO ())
