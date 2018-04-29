@@ -11,6 +11,7 @@ module FoundationDb.C.FFI (
   , fdb_future_block_until_ready
   , fdb_future_is_ready
   , fdb_future_set_callback
+  , fdb_future_release_memory
   ) where
 
 
@@ -52,3 +53,6 @@ foreign import ccall safe "foundationdb/fdb_c.h fdb_future_is_ready"
 
 foreign import ccall safe "foundationdb/fdb_c.h fdb_future_set_callback"
   fdb_future_set_callback :: Ptr Future' -> FunPtr (Ptr Future' -> Ptr Param' -> IO ()) -> Ptr Param' -> IO CInt
+
+foreign import ccall safe "foundationdb/fdb_c.h fdb_future_release_memory"
+  fdb_future_release_memory :: Ptr Future' -> IO ()

@@ -14,6 +14,7 @@ module FoundationDb.C (
   , futureBlockUntilReady
   , futureIsReady
   , futureSetCallback
+  , futureReleaseMemory
   ) where
 
 
@@ -80,6 +81,10 @@ futureSetCallback f c p = do
     CError
       <$> FFI.fdb_future_set_callback
             (unFuture f) (unCallback c) (unParam p)
+
+futureReleaseMemory :: Future -> IO ()
+futureReleaseMemory f =
+  FFI.fdb_future_release_memory (unFuture f)
 
 -- ---------------------------------------------------------------------------
 -- Errors
