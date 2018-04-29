@@ -1,9 +1,19 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 module FoundationDb.C (
-    initialise
-  , Error (..)
+    Error (..)
   , catchError
   , errorMessage
+  -- * Setup / teardown
+  , selectApiVersion
+  , setupNetwork
+  , runNetwork
+  , stopNetwork
+  -- * Futures
+  , futureCancel
+  , futureDestroy
+  , futureBlockUntilReady
+  , futureIsReady
+  , futureSetCallback
   ) where
 
 
@@ -20,22 +30,68 @@ import           FoundationDb.C.Types
 import           System.IO.Unsafe (unsafePerformIO)
 
 
-initialise :: IO ()
-initialise = do
-  selectApiVersion
-  return ()
+-- ---------------------------------------------------------------------------
+-- Setup / teardown of network thread
 
 selectApiVersion :: IO ()
 selectApiVersion =
   throwingX SelectAPIError $
     CError <$> FFI.fdb_hs_select_api_version
 
+setupNetwork :: IO ()
+setupNetwork =
+  throwingX SetupNetworkError $
+    CError <$> FFI.fdb_setup_network
+
+runNetwork :: IO ()
+runNetwork =
+  throwingX RunNetworkError $
+    CError <$> FFI.fdb_run_network
+
+stopNetwork :: IO ()
+stopNetwork =
+  throwingX StopNetworkError $
+    CError <$> FFI.fdb_stop_network
+
+-- ---------------------------------------------------------------------------
+-- Futures
+
+futureCancel :: Future -> IO ()
+futureCancel =
+  FFI.fdb_future_cancel . unFuture
+
+futureDestroy :: Future -> IO ()
+futureDestroy =
+  FFI.fdb_future_destroy . unFuture
+
+futureBlockUntilReady :: Future -> IO ()
+futureBlockUntilReady f =
+  throwingX FutureBlockError $
+    CError <$> FFI.fdb_future_block_until_ready (unFuture f)
+
+futureIsReady :: Future -> IO Bool
+futureIsReady f = do
+  ret <- FFI.fdb_future_is_ready (unFuture f)
+  return (cbool ret)
+
+futureSetCallback :: Future -> Callback -> Param -> IO ()
+futureSetCallback f c p = do
+  throwingX FutureSetCallbackError $
+    CError
+      <$> FFI.fdb_future_set_callback
+            (unFuture f) (unCallback c) (unParam p)
+
 -- ---------------------------------------------------------------------------
 -- Errors
 
 data Error =
-    Error CError
-  | SelectAPIError CError
+    Error !CError
+  | SelectAPIError !CError
+  | SetupNetworkError !CError
+  | RunNetworkError !CError
+  | StopNetworkError !CError
+  | FutureBlockError !CError
+  | FutureSetCallbackError !CError
   deriving (Eq, Ord, Show)
 
 -- | Produce a human-readable error message from a 'CError'.

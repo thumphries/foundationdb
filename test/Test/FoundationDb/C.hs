@@ -9,7 +9,6 @@ import           Foreign.C
 import           FoundationDb.C
 import           FoundationDb.C.Types
 
-import           Test.FoundationDb.Util (testIO)
 import           Test.QuickCheck
 
 
@@ -24,11 +23,6 @@ prop_errorMessage_1 =
     errorMessage (CError 1)
     ===
     "End of stream"
-
-prop_setup :: Property
-prop_setup =
-  once . testIO $ do
-    initialise
 
 
 return []
