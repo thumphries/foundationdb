@@ -20,6 +20,7 @@ library
 
   exposed-modules:     
                        FoundationDb.C
+                       FoundationDb.C.FFI
                        FoundationDb.Types
 
   build-depends:
