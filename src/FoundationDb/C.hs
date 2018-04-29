@@ -18,6 +18,7 @@ module FoundationDb.C (
   , futureGetError
   , futureGetKey
   , futureGetValue
+  , futureGetStringArray
   ) where
 
 
@@ -27,7 +28,10 @@ import           Control.Monad (unless)
 import           Data.Bifunctor (first)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as B
+import           Data.Vector (Vector)
+import qualified Data.Vector.Storable as SV
 
+import           Foreign.ForeignPtr (newForeignPtr_)
 import           Foreign.Marshal.Alloc (alloca)
 import           Foreign.Storable (Storable (..))
 
@@ -122,6 +126,18 @@ futureGetValue f =
             valPtr <- peek valPtrPtr
             Just <$> B.packCStringLen (valPtr, fromIntegral len)
 
+futureGetStringArray :: Future -> IO (Vector ByteString)
+futureGetStringArray f =
+  alloca $ \arrPtr ->
+    alloca $ \lenPtr -> do
+      throwingX FutureGetStringArrayError $
+        CError <$> FFI.fdb_future_get_string_array (unFuture f) arrPtr lenPtr
+      len <- peek lenPtr
+      arr <- peek arrPtr
+      ptr <- newForeignPtr_ arr
+      let vec = SV.convert $ SV.unsafeFromForeignPtr0 ptr (fromIntegral len)
+      traverse B.packCString vec
+
 -- ---------------------------------------------------------------------------
 -- Errors
 
@@ -135,6 +151,7 @@ data Error =
   | FutureSetCallbackError !CError
   | FutureGetKeyError !CError
   | FutureGetValueError !CError
+  | FutureGetStringArrayError !CError
   deriving (Eq, Ord, Show)
 
 -- | Produce a human-readable error message from a 'CError'.
