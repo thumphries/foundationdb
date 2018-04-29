@@ -8,8 +8,6 @@ module FoundationDb.C.FFI (
 import           Foreign
 import           Foreign.C
 
-import           FoundationDb.Types
-
 
 foreign import ccall safe "fdb_c.h fdb_get_error"
   fdb_get_error :: CInt -> Ptr CString

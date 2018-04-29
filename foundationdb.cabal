@@ -25,3 +25,15 @@ library
 
   build-depends:
                        base
+
+test-suite test
+  type:                exitcode-stdio-1.0
+  default-language:    Haskell2010
+  ghc-options:         -Wall -Werror
+  hs-source-dirs:      test
+  main-is:             test.hs
+
+  build-depends:
+                       base
+                     , foundationdb
+                     , hspec
