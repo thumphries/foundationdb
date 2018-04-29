@@ -16,6 +16,13 @@ module FoundationDb.C.FFI (
   , fdb_future_get_key
   , fdb_future_get_value
   , fdb_future_get_string_array
+  , fdb_transaction_destroy
+  , fdb_transaction_get
+  , fdb_transaction_get_key
+  , fdb_transaction_set
+  , fdb_transaction_commit
+  , fdb_transaction_reset
+  , fdb_transaction_cancel
   ) where
 
 
@@ -75,3 +82,24 @@ foreign import ccall safe "foundationdb/fdb_c.h fdb_future_get_value"
 
 foreign import ccall safe "foundationdb/fdb_c.h fdb_future_get_string_array"
   fdb_future_get_string_array :: Ptr Future' -> Ptr (Ptr CString) -> Ptr CInt -> IO CInt
+
+foreign import ccall safe "foundationdb/fdb_c.h fdb_transaction_destroy"
+  fdb_transaction_destroy :: Ptr Transaction' -> IO ()
+
+foreign import ccall safe "foundationdb/fdb_c.h fdb_transaction_get"
+  fdb_transaction_get :: Ptr Transaction' -> Ptr CChar -> Int -> CInt -> IO (Ptr Future')
+
+foreign import ccall safe "foundationdb/fdb_c.h fdb_transaction_get_key"
+  fdb_transaction_get_key :: Ptr Transaction' -> Ptr CChar -> Int -> CInt -> CInt -> CInt -> IO (Ptr Future')
+
+foreign import ccall safe "foundationdb/fdb_c.h fdb_transaction_set"
+  fdb_transaction_set :: Ptr Transaction' -> Ptr CChar -> Int -> Ptr CChar -> Int -> IO ()
+
+foreign import ccall safe "foundationdb/fdb_c.h fdb_transaction_commit"
+  fdb_transaction_commit :: Ptr Transaction' -> IO (Ptr Future')
+
+foreign import ccall safe "foundationdb/fdb_c.h fdb_transaction_reset"
+  fdb_transaction_reset :: Ptr Transaction' -> IO ()
+
+foreign import ccall safe "foundationdb/fdb_c.h fdb_transaction_cancel"
+  fdb_transaction_cancel :: Ptr Transaction' -> IO ()
