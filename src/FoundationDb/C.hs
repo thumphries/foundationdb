@@ -17,6 +17,7 @@ module FoundationDb.C (
   , futureReleaseMemory
   , futureGetError
   , futureGetKey
+  , futureGetValue
   ) where
 
 
@@ -105,6 +106,22 @@ futureGetKey f =
       keyPtr <- peek keyPtrPtr
       B.packCStringLen (keyPtr, fromIntegral len)
 
+futureGetValue :: Future -> IO (Maybe ByteString)
+futureGetValue f =
+  alloca $ \boolPtr ->
+    alloca $ \valPtrPtr ->
+      alloca $ \lenPtr -> do
+        throwingX FutureGetValueError $
+          CError <$> FFI.fdb_future_get_value (unFuture f) boolPtr valPtrPtr lenPtr
+        bool <- peek boolPtr
+        case cbool bool of
+          False ->
+            return Nothing
+          True -> do
+            len <- peek lenPtr
+            valPtr <- peek valPtrPtr
+            Just <$> B.packCStringLen (valPtr, fromIntegral len)
+
 -- ---------------------------------------------------------------------------
 -- Errors
 
@@ -117,6 +134,7 @@ data Error =
   | FutureBlockError !CError
   | FutureSetCallbackError !CError
   | FutureGetKeyError !CError
+  | FutureGetValueError !CError
   deriving (Eq, Ord, Show)
 
 -- | Produce a human-readable error message from a 'CError'.
