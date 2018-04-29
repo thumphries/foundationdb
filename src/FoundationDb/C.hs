@@ -1,6 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 module FoundationDb.C (
     initialise
+  , stop
   , Error (..)
   , catchError
   , errorMessage
@@ -23,19 +24,43 @@ import           System.IO.Unsafe (unsafePerformIO)
 initialise :: IO ()
 initialise = do
   selectApiVersion
+  setupNetwork
+  runNetwork
   return ()
+
+stop :: IO ()
+stop =
+  stopNetwork
 
 selectApiVersion :: IO ()
 selectApiVersion =
   throwingX SelectAPIError $
     CError <$> FFI.fdb_hs_select_api_version
 
+setupNetwork :: IO ()
+setupNetwork =
+  throwingX SetupNetworkError $
+    CError <$> FFI.fdb_setup_network
+
+runNetwork :: IO ()
+runNetwork =
+  throwingX RunNetworkError $
+    CError <$> FFI.fdb_run_network
+
+stopNetwork :: IO ()
+stopNetwork =
+  throwingX StopNetworkError $
+    CError <$> FFI.fdb_stop_network
+
 -- ---------------------------------------------------------------------------
 -- Errors
 
 data Error =
-    Error CError
-  | SelectAPIError CError
+    Error !CError
+  | SelectAPIError !CError
+  | SetupNetworkError !CError
+  | RunNetworkError !CError
+  | StopNetworkError !CError
   deriving (Eq, Ord, Show)
 
 -- | Produce a human-readable error message from a 'CError'.
