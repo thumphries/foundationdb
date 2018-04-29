@@ -4,7 +4,6 @@
 
 #include "fdb_hs.h"
 
-int fdb_hs_select_api_version(int version) {
-  return fdb_select_api_version(version);
+int fdb_hs_select_api_version(void) {
+  return fdb_select_api_version(FDB_API_VERSION);
 }
-

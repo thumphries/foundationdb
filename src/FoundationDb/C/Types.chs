@@ -6,7 +6,8 @@ module FoundationDb.C.Types (
   , Future
   , NetworkOption (..)
   , StreamingMode (..)
-  , Error (..)
+  , CError (..)
+  , csuccess
   ) where
 
 
@@ -36,9 +37,12 @@ import           Foreign.C
 -- FDBTransaction family
 
 
-newtype Error = Error {
-    unError :: CInt
+newtype CError = CError {
+    unCError :: CInt
   } deriving (Eq, Ord, Show)
+
+csuccess :: CError -> Bool
+csuccess = (== 0) . unCError
 
 data Database
 
