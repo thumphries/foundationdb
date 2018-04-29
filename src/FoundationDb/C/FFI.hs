@@ -15,6 +15,7 @@ module FoundationDb.C.FFI (
   , fdb_future_get_error
   , fdb_future_get_key
   , fdb_future_get_value
+  , fdb_future_get_string_array
   ) where
 
 
@@ -71,3 +72,6 @@ foreign import ccall safe "foundationdb/fdb_c.h fdb_future_get_key"
 
 foreign import ccall safe "foundationdb/fdb_c.h fdb_future_get_value"
   fdb_future_get_value :: Ptr Future' -> Ptr CInt -> Ptr CString -> Ptr CInt -> IO CInt
+
+foreign import ccall safe "foundationdb/fdb_c.h fdb_future_get_string_array"
+  fdb_future_get_string_array :: Ptr Future' -> Ptr (Ptr CString) -> Ptr CInt -> IO CInt

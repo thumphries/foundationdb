@@ -30,6 +30,7 @@ library
   build-depends:
                        base
                      , bytestring
+                     , vector
 
 test-suite test
   type:                exitcode-stdio-1.0
