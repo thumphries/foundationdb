@@ -1,10 +1,19 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 module FoundationDb.C (
-    initialise
-  , stop
-  , Error (..)
+    Error (..)
   , catchError
   , errorMessage
+  -- * Setup / teardown
+  , selectApiVersion
+  , setupNetwork
+  , runNetwork
+  , stopNetwork
+  -- * Futures
+  , futureCancel
+  , futureDestroy
+  , futureBlockUntilReady
+  , futureIsReady
+  , futureSetCallback
   ) where
 
 
@@ -21,16 +30,8 @@ import           FoundationDb.C.Types
 import           System.IO.Unsafe (unsafePerformIO)
 
 
-initialise :: IO ()
-initialise = do
-  selectApiVersion
-  setupNetwork
-  runNetwork
-  return ()
-
-stop :: IO ()
-stop =
-  stopNetwork
+-- ---------------------------------------------------------------------------
+-- Setup / teardown of network thread
 
 selectApiVersion :: IO ()
 selectApiVersion =
@@ -53,6 +54,34 @@ stopNetwork =
     CError <$> FFI.fdb_stop_network
 
 -- ---------------------------------------------------------------------------
+-- Futures
+
+futureCancel :: Future -> IO ()
+futureCancel =
+  FFI.fdb_future_cancel . unFuture
+
+futureDestroy :: Future -> IO ()
+futureDestroy =
+  FFI.fdb_future_destroy . unFuture
+
+futureBlockUntilReady :: Future -> IO ()
+futureBlockUntilReady f =
+  throwingX FutureBlockError $
+    CError <$> FFI.fdb_future_block_until_ready (unFuture f)
+
+futureIsReady :: Future -> IO Bool
+futureIsReady f = do
+  ret <- FFI.fdb_future_is_ready (unFuture f)
+  return (cbool ret)
+
+futureSetCallback :: Future -> Callback -> Param -> IO ()
+futureSetCallback f c p = do
+  throwingX FutureSetCallbackError $
+    CError
+      <$> FFI.fdb_future_set_callback
+            (unFuture f) (unCallback c) (unParam p)
+
+-- ---------------------------------------------------------------------------
 -- Errors
 
 data Error =
@@ -61,6 +90,8 @@ data Error =
   | SetupNetworkError !CError
   | RunNetworkError !CError
   | StopNetworkError !CError
+  | FutureBlockError !CError
+  | FutureSetCallbackError !CError
   deriving (Eq, Ord, Show)
 
 -- | Produce a human-readable error message from a 'CError'.

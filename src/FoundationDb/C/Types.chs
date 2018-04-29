@@ -1,16 +1,19 @@
 {-# LANGUAGE EmptyDataDecls #-}
 module FoundationDb.C.Types (
-    Database
-  , Transaction
-  , Cluster
-  , Future
+    Future (..)
+  , Future'
+  , Callback (..)
+  , Param (..)
+  , Param'
   , NetworkOption (..)
   , StreamingMode (..)
   , CError (..)
   , csuccess
+  , cbool
   ) where
 
 
+import           Foreign
 import           Foreign.C
 
 
@@ -44,13 +47,25 @@ newtype CError = CError {
 csuccess :: CError -> Bool
 csuccess = (== 0) . unCError
 
-data Database
+cbool :: CInt -> Bool
+cbool 0 = False
+cbool _ = True
 
-data Transaction
+newtype Future = Future {
+    unFuture :: Ptr Future'
+  } deriving (Eq, Ord, Show)
 
-data Cluster
+data Future'
 
-data Future
+newtype Callback = Callback {
+    unCallback :: FunPtr (Ptr Future' -> Ptr Param' -> IO ())
+  }
+
+newtype Param = Param {
+    unParam :: Ptr Param'
+  } deriving (Eq, Ord, Show)
+
+data Param'
 
 {#enum FDBNetworkOption as NetworkOption
    { FDB_NET_OPTION_LOCAL_ADDRESS as LOCAL_ADDRESS
