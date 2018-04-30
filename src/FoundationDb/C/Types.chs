@@ -44,7 +44,7 @@ boolc :: Bool -> CInt
 boolc False = 0
 boolc True = 1
 
-newtype Future = Future {
+newtype Future a = Future {
     unFuture :: Ptr Future'
   } deriving (Eq, Ord, Show)
 
