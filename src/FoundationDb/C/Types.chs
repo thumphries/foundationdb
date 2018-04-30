@@ -25,27 +25,7 @@ import           Foreign
 import           Foreign.C
 
 
-#define FDB_API_VERSION 510
-#include <foundationdb/fdb_c.h>
-#include <foundationdb/fdb_c_options.g.h>
-
-
--- TODO list
--- Opaque types: Database, Cluster, FDBFuture
--- NetworkOption
-
--- Library setup / teardown:
--- fdb_select_api_version
--- fdb_setup_network
--- fdb_network_set_option
--- fdb_run_network
--- fdb_stop_network
-
--- FDBCallback
-
--- FDBFuture
-
--- FDBTransaction family
+#include "fdb_hs.h"
 
 
 newtype CError = CError {
