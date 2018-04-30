@@ -6,6 +6,7 @@ module FoundationDb.C (
 
   -- * Setup / teardown
   , selectApiVersion
+  , setNetworkOption
   , setupNetwork
   , runNetwork
   , stopNetwork
@@ -73,6 +74,15 @@ selectApiVersion :: IO ()
 selectApiVersion =
   throwingX SelectAPIError $
     CError <$> FFI.fdb_hs_select_api_version
+
+setNetworkOption :: NetworkOption -> ByteString -> IO ()
+setNetworkOption opt val =
+  B.useAsCStringLen val $ \(ptr, len) ->
+    throwingX SetNetworkOptionError . fmap CError $
+      FFI.fdb_network_set_option
+        (fromIntegral (fromEnum opt))
+        ptr
+        (fromIntegral len)
 
 setupNetwork :: IO ()
 setupNetwork =
@@ -259,6 +269,7 @@ transactionCancel t =
 data Error =
     Error !CError
   | SelectAPIError !CError
+  | SetNetworkOptionError !CError
   | SetupNetworkError !CError
   | RunNetworkError !CError
   | StopNetworkError !CError
