@@ -27,8 +27,11 @@ module FoundationDb.C (
   -- * Cluster
   , createCluster
   , destroyCluster
+
+  -- * Database
   , createDatabase
   , destroyDatabase
+  , createTransaction
 
   -- * Transactions
   , transactionDestroy
@@ -189,6 +192,9 @@ destroyCluster :: Cluster -> IO ()
 destroyCluster c =
   FFI.fdb_cluster_destroy (unCluster c)
 
+-- ---------------------------------------------------------------------------
+-- Database
+
 createDatabase :: Cluster -> IO Future
 createDatabase c =
   Future <$> FFI.fdb_hs_cluster_create_database (unCluster c)
@@ -196,6 +202,14 @@ createDatabase c =
 destroyDatabase :: Database -> IO ()
 destroyDatabase d =
   FFI.fdb_database_destroy (unDatabase d)
+
+createTransaction :: Database -> IO Transaction
+createTransaction d =
+  alloca $ \txnPtr -> do
+    throwingX CreateTransactionError $
+      CError <$> FFI.fdb_database_create_transaction (unDatabase d) txnPtr
+    ptr <- peek txnPtr
+    return (Transaction ptr)
 
 -- ---------------------------------------------------------------------------
 -- Transaction
@@ -255,6 +269,7 @@ data Error =
   | FutureGetStringArrayError !CError
   | FutureGetClusterError !CError
   | FutureGetDatabaseError !CError
+  | CreateTransactionError !CError
   deriving (Eq, Ord, Show)
 
 -- | Produce a human-readable error message from a 'CError'.
