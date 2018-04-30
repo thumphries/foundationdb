@@ -24,6 +24,10 @@ module FoundationDb.C (
   , futureGetCluster
   , futureGetDatabase
 
+  -- * Cluster
+  , createCluster
+  , destroyCluster
+
   -- * Transactions
   , transactionDestroy
   , transactionGet
@@ -45,6 +49,7 @@ import           Data.Int (Int32)
 import           Data.Vector (Vector)
 import qualified Data.Vector.Storable as SV
 
+import           Foreign.C.String (withCString)
 import           Foreign.C.Types (CInt (..))
 import           Foreign.ForeignPtr (newForeignPtr_)
 import           Foreign.Marshal.Alloc (alloca)
@@ -169,6 +174,18 @@ futureGetDatabase f =
       CError <$> FFI.fdb_future_get_database (unFuture f) dbPtr
     db <- peek dbPtr
     return (Database db)
+
+-- ---------------------------------------------------------------------------
+-- Cluster
+
+createCluster :: FilePath -> IO Future
+createCluster fp = do
+  withCString fp $ \cstr ->
+    Future <$> FFI.fdb_create_cluster cstr
+
+destroyCluster :: Cluster -> IO ()
+destroyCluster c =
+  FFI.fdb_cluster_destroy (unCluster c)
 
 -- ---------------------------------------------------------------------------
 -- Transaction
