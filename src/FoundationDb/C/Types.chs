@@ -11,6 +11,7 @@ module FoundationDb.C.Types (
   , Cluster'
   , Database (..)
   , Database'
+  , DatabaseOption (..)
   , NetworkOption (..)
   , StreamingMode (..)
   , CError (..)
@@ -123,6 +124,14 @@ data Cluster'
    , FDB_NET_OPTION_DISABLE_CLIENT_STATISTICS_LOGGING as DISABLE_CLIENT_STATISTICS_LOGGING
    , FDB_NET_OPTION_ENABLE_SLOW_TASK_PROFILING as ENABLE_SLOW_TASK_PROFILING
    } deriving (Eq, Ord, Show)
+#}
+
+{#enum FDBDatabaseOption as DatabaseOption
+  { FDB_DB_OPTION_LOCATION_CACHE_SIZE as LOCATION_CACHE_SIZE
+  , FDB_DB_OPTION_MAX_WATCHES as MAX_WATCHES
+  , FDB_DB_OPTION_MACHINE_ID as MACHINE_ID
+  , FDB_DB_OPTION_DATACENTER_ID as DATACENTER_ID
+  } deriving (Eq, Ord, Show)
 #}
 
 {#enum FDBStreamingMode as StreamingMode
