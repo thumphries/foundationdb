@@ -27,6 +27,7 @@ module FoundationDb.C (
   -- * Cluster
   , createCluster
   , destroyCluster
+  , createDatabase
 
   -- * Transactions
   , transactionDestroy
@@ -186,6 +187,10 @@ createCluster fp = do
 destroyCluster :: Cluster -> IO ()
 destroyCluster c =
   FFI.fdb_cluster_destroy (unCluster c)
+
+createDatabase :: Cluster -> IO Future
+createDatabase c =
+  Future <$> FFI.fdb_hs_cluster_create_database (unCluster c)
 
 -- ---------------------------------------------------------------------------
 -- Transaction
