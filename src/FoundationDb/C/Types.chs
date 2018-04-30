@@ -13,7 +13,6 @@ module FoundationDb.C.Types (
   , Database'
   , DatabaseOption (..)
   , NetworkOption (..)
-  , DatabaseOption (..)
   , TransactionOption (..)
   , StreamingMode (..)
   , CError (..)
