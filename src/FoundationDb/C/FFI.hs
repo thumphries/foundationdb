@@ -28,6 +28,7 @@ module FoundationDb.C.FFI (
   , fdb_create_cluster
   , fdb_cluster_destroy
   , fdb_hs_cluster_create_database
+  , fdb_database_destroy
   ) where
 
 
@@ -123,3 +124,6 @@ foreign import ccall safe "foundationdb/fdb_c.h fdb_cluster_destroy"
 
 foreign import ccall safe "fdb_hs.h fdb_hs_cluster_create_database"
   fdb_hs_cluster_create_database :: Ptr Cluster' -> IO (Ptr Future')
+
+foreign import ccall safe "foundationdb/fdb_c.h fdb_database_destroy"
+  fdb_database_destroy :: Ptr Database' -> IO ()
