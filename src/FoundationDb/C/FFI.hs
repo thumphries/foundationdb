@@ -25,6 +25,7 @@ module FoundationDb.C.FFI (
   , fdb_transaction_commit
   , fdb_transaction_reset
   , fdb_transaction_cancel
+  , fdb_create_cluster
   ) where
 
 
@@ -111,3 +112,6 @@ foreign import ccall safe "foundationdb/fdb_c.h fdb_transaction_reset"
 
 foreign import ccall safe "foundationdb/fdb_c.h fdb_transaction_cancel"
   fdb_transaction_cancel :: Ptr Transaction' -> IO ()
+
+foreign import ccall safe "foundationdb/fdb_c.h fdb_create_cluster"
+  fdb_create_cluster :: CString -> IO (Ptr Future')
