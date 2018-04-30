@@ -102,40 +102,40 @@ stopNetwork =
 -- ---------------------------------------------------------------------------
 -- Futures
 
-futureCancel :: Future -> IO ()
+futureCancel :: Future a -> IO ()
 futureCancel =
   FFI.fdb_future_cancel . unFuture
 
-futureDestroy :: Future -> IO ()
+futureDestroy :: Future a -> IO ()
 futureDestroy =
   FFI.fdb_future_destroy . unFuture
 
-futureBlockUntilReady :: Future -> IO ()
+futureBlockUntilReady :: Future a -> IO ()
 futureBlockUntilReady f =
   throwingX FutureBlockError $
     CError <$> FFI.fdb_future_block_until_ready (unFuture f)
 
-futureIsReady :: Future -> IO Bool
+futureIsReady :: Future a -> IO Bool
 futureIsReady f = do
   ret <- FFI.fdb_future_is_ready (unFuture f)
   return (cbool ret)
 
-futureSetCallback :: Future -> Callback -> Param -> IO ()
+futureSetCallback :: Future a -> Callback -> Param -> IO ()
 futureSetCallback f c p = do
   throwingX FutureSetCallbackError $
     CError
       <$> FFI.fdb_future_set_callback
             (unFuture f) (unCallback c) (unParam p)
 
-futureReleaseMemory :: Future -> IO ()
+futureReleaseMemory :: Future a -> IO ()
 futureReleaseMemory f =
   FFI.fdb_future_release_memory (unFuture f)
 
-futureGetError :: Future -> IO CError
+futureGetError :: Future a -> IO CError
 futureGetError f =
   CError <$> FFI.fdb_future_get_error (unFuture f)
 
-futureGetKey :: Future -> IO ByteString
+futureGetKey :: Future a -> IO ByteString
 futureGetKey f =
   alloca $ \keyPtrPtr ->
     alloca $ \lenPtr -> do
@@ -145,7 +145,7 @@ futureGetKey f =
       keyPtr <- peek keyPtrPtr
       B.packCStringLen (keyPtr, fromIntegral len)
 
-futureGetValue :: Future -> IO (Maybe ByteString)
+futureGetValue :: Future a -> IO (Maybe ByteString)
 futureGetValue f =
   alloca $ \boolPtr ->
     alloca $ \valPtrPtr ->
@@ -162,7 +162,7 @@ futureGetValue f =
             Just <$> B.packCStringLen (valPtr, fromIntegral len)
 
 
-futureGetStringArray :: Future -> IO (Vector ByteString)
+futureGetStringArray :: Future a -> IO (Vector ByteString)
 futureGetStringArray f =
   alloca $ \arrPtr ->
     alloca $ \lenPtr -> do
@@ -174,7 +174,7 @@ futureGetStringArray f =
       let vec = SV.convert $ SV.unsafeFromForeignPtr0 ptr (fromIntegral len)
       traverse B.packCString vec
 
-futureGetCluster :: Future -> IO Cluster
+futureGetCluster :: Future Cluster -> IO Cluster
 futureGetCluster f =
   alloca $ \clsPtr -> do
     throwingX FutureGetClusterError $
@@ -182,7 +182,7 @@ futureGetCluster f =
     cls <- peek clsPtr
     return (Cluster cls)
 
-futureGetDatabase :: Future -> IO Database
+futureGetDatabase :: Future Database -> IO Database
 futureGetDatabase f =
   alloca $ \dbPtr -> do
     throwingX FutureGetDatabaseError $
@@ -193,7 +193,7 @@ futureGetDatabase f =
 -- ---------------------------------------------------------------------------
 -- Cluster
 
-createCluster :: FilePath -> IO Future
+createCluster :: FilePath -> IO (Future a)
 createCluster fp = do
   withCString fp $ \cstr ->
     Future <$> FFI.fdb_create_cluster cstr
@@ -205,7 +205,7 @@ destroyCluster c =
 -- ---------------------------------------------------------------------------
 -- Database
 
-createDatabase :: Cluster -> IO Future
+createDatabase :: Cluster -> IO (Future Database)
 createDatabase c =
   Future <$> FFI.fdb_hs_cluster_create_database (unCluster c)
 
@@ -228,12 +228,12 @@ transactionDestroy :: Transaction -> IO ()
 transactionDestroy t =
   FFI.fdb_transaction_destroy (unTransaction t)
 
-transactionGet :: Transaction -> ByteString -> Bool -> IO Future
+transactionGet :: Transaction -> ByteString -> Bool -> IO (Future a)
 transactionGet t key snapshot =
   B.useAsCStringLen key $ \(ptr, len) ->
     Future <$> FFI.fdb_transaction_get (unTransaction t) ptr len (boolc snapshot)
 
-transactionGetKey :: Transaction -> ByteString -> Bool -> Int32 -> Bool -> IO Future
+transactionGetKey :: Transaction -> ByteString -> Bool -> Int32 -> Bool -> IO (Future a)
 transactionGetKey t key orEqual offset snapshot =
   B.useAsCStringLen key $ \(ptr, len) ->
     fmap Future $
@@ -251,7 +251,7 @@ transactionSet t key value =
   B.useAsCStringLen value $ \(valuePtr, valueLen) ->
     FFI.fdb_transaction_set (unTransaction t) keyPtr keyLen valuePtr valueLen
 
-transactionCommit :: Transaction -> IO Future
+transactionCommit :: Transaction -> IO (Future a)
 transactionCommit t =
   Future <$> FFI.fdb_transaction_commit (unTransaction t)
 
