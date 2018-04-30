@@ -27,6 +27,9 @@ module FoundationDb.C.FFI (
   , fdb_transaction_cancel
   , fdb_create_cluster
   , fdb_cluster_destroy
+  , fdb_hs_cluster_create_database
+  , fdb_database_destroy
+  , fdb_database_create_transaction
   ) where
 
 
@@ -119,3 +122,12 @@ foreign import ccall safe "foundationdb/fdb_c.h fdb_create_cluster"
 
 foreign import ccall safe "foundationdb/fdb_c.h fdb_cluster_destroy"
   fdb_cluster_destroy :: Ptr Cluster' -> IO ()
+
+foreign import ccall safe "fdb_hs.h fdb_hs_cluster_create_database"
+  fdb_hs_cluster_create_database :: Ptr Cluster' -> IO (Ptr Future')
+
+foreign import ccall safe "foundationdb/fdb_c.h fdb_database_destroy"
+  fdb_database_destroy :: Ptr Database' -> IO ()
+
+foreign import ccall safe "foundationdb/fdb_c.h fdb_database_create_transaction"
+  fdb_database_create_transaction :: Ptr Database' -> Ptr (Ptr Transaction') -> IO CInt
