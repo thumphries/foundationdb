@@ -1,4 +1,4 @@
-{ mkDerivation, base, bytestring, c2hs, directory, fdb_c, filepath
+{ mkDerivation, async, base, bytestring, c2hs, fdb_c, filepath
 , process, QuickCheck, stdenv, temporary, vector
 }:
 mkDerivation {
@@ -9,7 +9,7 @@ mkDerivation {
   librarySystemDepends = [ fdb_c ];
   libraryToolDepends = [ c2hs ];
   testHaskellDepends = [
-    base directory filepath process QuickCheck temporary
+    async base filepath process QuickCheck temporary
   ];
   homepage = "https://github.com/thumphries/foundationdb";
   description = "Haskell bindings to Apple's FoundationDB";
