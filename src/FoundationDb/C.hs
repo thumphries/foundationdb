@@ -145,7 +145,7 @@ futureGetKey f =
       keyPtr <- peek keyPtrPtr
       B.packCStringLen (keyPtr, fromIntegral len)
 
-futureGetValue :: Future a -> IO (Maybe ByteString)
+futureGetValue :: Future ByteString -> IO (Maybe ByteString)
 futureGetValue f =
   alloca $ \boolPtr ->
     alloca $ \valPtrPtr ->
@@ -162,7 +162,8 @@ futureGetValue f =
             Just <$> B.packCStringLen (valPtr, fromIntegral len)
 
 
-futureGetStringArray :: Future a -> IO (Vector ByteString)
+-- FIXME should this be `Maybe` too?
+futureGetStringArray :: Future (Vector ByteString) -> IO (Vector ByteString)
 futureGetStringArray f =
   alloca $ \arrPtr ->
     alloca $ \lenPtr -> do
@@ -251,7 +252,18 @@ transactionSet t key value =
   B.useAsCStringLen value $ \(valuePtr, valueLen) ->
     FFI.fdb_transaction_set (unTransaction t) keyPtr keyLen valuePtr valueLen
 
-transactionCommit :: Transaction -> IO (Future a)
+-- | Attempts to commit the sets and clears previously applied to the
+-- database snapshot represented by a 'Transaction' to the actual
+-- database. The commit may or may not succeed – in particular, if a
+-- conflicting transaction previously committed, then the commit must
+-- fail in order to preserve transactional isolation. If the commit
+-- does succeed, the transaction is durably committed to the database
+-- and all subsequently started transactions will observe its effects.
+--
+-- Returns a 'Future' representing an empty value. You must first wait
+-- for the 'Future' to be ready, then destroy the 'Future' with
+-- 'futureDestroy'.
+transactionCommit :: Transaction -> IO (Future ())
 transactionCommit t =
   Future <$> FFI.fdb_transaction_commit (unTransaction t)
 
@@ -297,6 +309,7 @@ errorMessage (CError cint) =
 newtype FDBException = FDBException {
     unFDBException :: Error
   } deriving (Eq, Ord, Show)
+
 instance Exception FDBException
 
 throwX :: Error -> IO a
